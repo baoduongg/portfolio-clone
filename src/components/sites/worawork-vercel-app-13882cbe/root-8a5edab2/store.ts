@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type PortfolioPageId = "about" | "experience" | "arts" | "behind-scenes";
+export type PcAppId = "desktop" | "portfolio" | "flappy";
 export type SensorName = string | null;
 
 interface WoraWorkState {
@@ -11,6 +12,7 @@ interface WoraWorkState {
   muted: boolean;
   currentTouchingObject: SensorName;
   currentPage: PortfolioPageId;
+  pcApp: PcAppId;
   mailboxOpen: boolean;
   portfolioOpen: boolean;
   inside: boolean;
@@ -24,6 +26,7 @@ interface WoraWorkState {
   toggleMuted: () => void;
   setTouching: (s: SensorName) => void;
   setCurrentPage: (p: PortfolioPageId) => void;
+  setPcApp: (a: PcAppId) => void;
   setMailboxOpen: (v: boolean) => void;
   setPortfolioOpen: (v: boolean) => void;
   setInside: (v: boolean) => void;
@@ -39,6 +42,7 @@ export const useWoraWorkStore = create<WoraWorkState>((set) => ({
   muted: true,
   currentTouchingObject: null,
   currentPage: "about",
+  pcApp: "desktop",
   mailboxOpen: false,
   portfolioOpen: false,
   inside: false,
@@ -52,6 +56,7 @@ export const useWoraWorkStore = create<WoraWorkState>((set) => ({
   toggleMuted: () => set((s) => ({ muted: !s.muted })),
   setTouching: (currentTouchingObject) => set({ currentTouchingObject }),
   setCurrentPage: (currentPage) => set({ currentPage }),
+  setPcApp: (pcApp) => set({ pcApp }),
   setMailboxOpen: (mailboxOpen) => set({ mailboxOpen }),
   setPortfolioOpen: (portfolioOpen) => set({ portfolioOpen }),
   setInside: (inside) => set({ inside }),

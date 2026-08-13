@@ -7,7 +7,9 @@ import { Environment } from "@react-three/drei";
 import { Village, type SensorBoxes } from "./Village";
 import { Player } from "./Player";
 import { Duck } from "./Duck";
+import { InteractionHints } from "./InteractionHints";
 import { useWoraWorkStore } from "./store";
+import { cameraTuning } from "./cameraDebug";
 
 const HDRI_URL =
   "https://raw.githubusercontent.com/pmndrs/drei-assets/456060a26bbeb8fdf79326f224b6d99b8bcce736/hdri/potsdamer_platz_1k.hdr";
@@ -22,7 +24,7 @@ export function Scene() {
   const [, forceRender] = useState(0);
 
   const onWheel = useCallback((e: React.WheelEvent) => {
-    zoom.current = Math.min(1.6, Math.max(0.6, zoom.current + e.deltaY * 0.001));
+    zoom.current = Math.min(cameraTuning.zoomMax, Math.max(cameraTuning.zoomMin, zoom.current + e.deltaY * 0.001));
     forceRender((n) => n + 1);
   }, []);
 
@@ -30,12 +32,17 @@ export function Scene() {
     // Canvas stays non-interactive until "Let's go" is pressed so a WebGL
     // touch/pointer listener can never eat the tap meant for that button.
     <div className="worawork-canvas" style={{ pointerEvents: started ? "auto" : "none" }} onWheel={onWheel}>
-      <Canvas dpr={[1, 1.5]} camera={{ fov: 32, position: [0, 23, 22] }} gl={{ powerPreference: "high-performance" }}>
+      <Canvas
+        dpr={[1, 1.5]}
+        camera={{ fov: cameraTuning.fov, position: [0, 58, 51] }}
+        gl={{ powerPreference: "high-performance" }}
+      >
         <Environment files={HDRI_URL} />
         <ambientLight intensity={0.9} />
         <directionalLight position={[6, 10, 4]} intensity={1.2} />
         <Village inside={inside} onSensorsReady={setSensorBoxes} onGroundReady={setGroundMeshes} onWaterReady={setWaterMesh} />
         <Player sensorBoxes={sensorBoxes} groundMeshes={groundMeshes} waterMesh={waterMesh} zoom={zoom.current} />
+        <InteractionHints sensorBoxes={sensorBoxes} inside={inside} />
         {!inside && <Duck />}
       </Canvas>
     </div>

@@ -21,3 +21,4 @@ export const SOUND_DUCK_QUACK = `${BASE}/Sounds/DuckQuack.mp3`;
 export const SOUND_CHEER_GO = `${BASE}/Sounds/CheerGoSound.mp3`;
 
 export const ICON_BASE = `${BASE}/Icons`;
+export const ICON_WORAWORK_LOGO = `${ICON_BASE}/worawork.webp`;

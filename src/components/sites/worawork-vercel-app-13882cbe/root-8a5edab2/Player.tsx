@@ -8,6 +8,7 @@ import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.j
 import { MODEL_PLAYER } from "./assetPaths";
 import type { SensorBoxes } from "./Village";
 import { useWoraWorkStore, type SensorName } from "./store";
+import { CAMERA_OFFSET, cameraTuning } from "./cameraDebug";
 
 const WALK_SPEED = 2.6;
 const RUN_SPEED = 5.2;
@@ -21,17 +22,22 @@ const SIT_ROTATION: Record<string, number> = {
   Sitting_Sofa_Big_Sensor: 0, // 6 o'clock
   Sitting_Sofa_Small_Sensor: Math.PI / 2, // 3 o'clock
 };
-const CAMERA_OFFSET = new THREE.Vector3(0, 23, 19);
 const UP = new THREE.Vector3(0, 1, 0);
 // Intro sequence after "Let's go": zoom in close, ease back out, then greet.
 const INTRO_ZOOM_IN_END = 0.7;
 const INTRO_ZOOM_OUT_END = 1.8;
-const INTRO_CLOSE_ZOOM = 0.32;
 const SPAWN_EXTERIOR = new THREE.Vector3(0, 0, 3);
 // Interior room geometry is baked ~200 units above the exterior in the source
 // GLB (keeps both rooms in one file without overlapping), so the player must
 // jump up there too when entering the house.
 const SPAWN_INTERIOR = new THREE.Vector3(0, 200.7, 6);
+// The touching check below only tested X/Z, so an exterior sensor and the
+// interior sensor baked ~200 units above it (same X/Z footprint, since the
+// house interior sits directly above its exterior shell) could both match at
+// once, showing interior interact hints while outside. A loose Y bound tells
+// them apart without requiring the player's feet to sit exactly inside the
+// sensor mesh's (often paper-thin) bounding box.
+const SENSOR_Y_TOLERANCE = 5;
 
 const GROUND_RAY_ORIGIN_OFFSET = 3; // cast from above the player so walking up a step still finds ground
 const GROUND_RAY_MAX_DISTANCE = 6; // ignore hits far below (e.g. water bed) so the player doesn't fall through gaps
@@ -49,6 +55,17 @@ const STEP_LIMIT = 0.45;
 // a full block near collision edges. Subdividing into chunks no bigger than
 // a Walk frame's stride keeps the sampling just as fine at any speed.
 const MAX_SUBSTEP_DIST = WALK_SPEED / 60;
+// A ground-raycast miss covers two very different cases that can't be told
+// apart from a single sample: a thin seam/hole in the merged low-poly mesh
+// (usually gone again within a substep or two), and genuinely walking off
+// the edge of the map into open water/void, which keeps missing for as long
+// as the key is held. Coasting through the former is fine (matches the
+// original floor on the other side); coasting through the latter is how the
+// player used to glide indefinitely across the water. Cap how far a miss
+// streak can carry the player before it's treated as a wall — comfortably
+// past any real seam we've hit, nowhere near how far an unblocked drift
+// over water would otherwise go.
+const MAX_MISS_DRIFT = 0.6;
 
 interface PlayerProps {
   sensorBoxes: SensorBoxes;
@@ -69,7 +86,6 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
   const rayOrigin = useRef(new THREE.Vector3());
   const dirScratch = useRef(new THREE.Vector3());
   const camTargetScratch = useRef(new THREE.Vector3());
-  const lookAtScratch = useRef(new THREE.Vector3());
   // Smoothed separately from camTargetScratch (which is a per-frame scratch,
   // not persisted) so orientation eases in instead of snapping. Starts at the
   // origin to match R3F's default pre-start camera.lookAt(0,0,0) — otherwise
@@ -78,6 +94,14 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
   const sitTargetScratch = useRef(new THREE.Vector3());
   const nextPosScratch = useRef(new THREE.Vector3());
   const stepVelocityScratch = useRef(new THREE.Vector3());
+  // Sitting pins position to the seat's (furniture-height) footprint; standing
+  // back up left the player parked on top of that furniture mesh instead of
+  // the floor, since the ground raycast just finds "whatever's directly below"
+  // — the seat top itself, not the floor beneath it — and stepping off from
+  // there could exceed STEP_LIMIT, reading as stuck. Restore exactly where
+  // they were standing before they sat down instead of re-deriving a floor spot.
+  const preSitPosition = useRef<THREE.Vector3 | null>(null);
+  const missDrift = useRef(0);
 
   const keys = useRef<Record<string, boolean>>({});
   const velocity = useRef(new THREE.Vector3());
@@ -93,7 +117,6 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
   const endIntro = useWoraWorkStore((s) => s.endIntro);
   const setShowGreetingText = useWoraWorkStore((s) => s.setShowGreetingText);
   const setTouching = useWoraWorkStore((s) => s.setTouching);
-  const setInside = useWoraWorkStore((s) => s.setInside);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => (keys.current[e.code] = true);
@@ -110,7 +133,26 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
     if (!group.current) return;
     const spawn = inside ? SPAWN_INTERIOR : SPAWN_EXTERIOR;
     group.current.position.copy(spawn);
+    // Camera is fixed per room (never follows the player — see the useFrame
+    // camera block below), so it must be snapped to the new room's anchor
+    // here too. Without this it would keep lerping from the old room's
+    // anchor toward the new one across the ~200-unit gap between them,
+    // sweeping through unmodeled void space for a moment.
+    camera.position.copy(spawn).addScaledVector(CAMERA_OFFSET, zoom * (inside ? cameraTuning.interiorZoomBoost : 1));
+    camLookTarget.current.copy(spawn).add(UP);
+    camera.lookAt(camLookTarget.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inside]);
+
+  useEffect(() => {
+    if (!group.current) return;
+    if (sittingOn) {
+      if (!preSitPosition.current) preSitPosition.current = group.current.position.clone();
+    } else if (preSitPosition.current) {
+      group.current.position.copy(preSitPosition.current);
+      preSitPosition.current = null;
+    }
+  }, [sittingOn]);
 
   useEffect(() => {
     actions["Idle"]?.reset().fadeIn(0.2).play();
@@ -167,6 +209,12 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
 
   useFrame((_, delta) => {
     if (!group.current || !started) return;
+
+    const perspectiveCamera = camera as THREE.PerspectiveCamera;
+    if (perspectiveCamera.fov !== cameraTuning.fov) {
+      perspectiveCamera.fov = cameraTuning.fov;
+      perspectiveCamera.updateProjectionMatrix();
+    }
 
     if (introPlaying) {
       introElapsed.current += delta;
@@ -234,14 +282,18 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
           nextPos.z = THREE.MathUtils.clamp(nextPos.z, bounds.min.z + 0.3, bounds.max.z - 0.3);
         }
 
-        // Follow terrain height, but only up small steps. Anything taller than
-        // STEP_LIMIT (furniture, walls, trees — all baked into the same mesh as
-        // the floor) blocks horizontal movement instead of being climbed, and
-        // the player slides along whichever axis is still clear. Stepping DOWN
-        // is never height-limited (gravity would just pull you down in a real
-        // physics sim) — only climbing up is, otherwise legitimate floor dips
-        // (e.g. a sunken tatami nook ~0.4 units below the main floor) become
-        // impassable walls, as happened blocking the house's Exit_Sensor.
+        // Follow terrain height, but only across small steps in EITHER
+        // direction. Anything taller than STEP_LIMIT (furniture, walls, trees
+        // — all baked into the same mesh as the floor) blocks horizontal
+        // movement instead of being climbed, and the player slides along
+        // whichever axis is still clear. Descent is capped too, not just
+        // ascent: some low-poly floor merges have a genuinely steep local dip
+        // (deeper than STEP_LIMIT) sitting right next to normal shallow
+        // steps — letting the player freely descend into one but not climb
+        // back out turns it into a one-way trap. Capping both directions
+        // just routes around those spots via the alongX/alongZ slide, same
+        // as any other obstacle; legitimate gentle slopes/stairs still pass
+        // because each substep's height delta is tiny (MAX_SUBSTEP_DIST).
         let groundY = start.y;
         if (groundMeshes.length) {
           const standY = groundHeightAt(groundMeshes, start.x, start.z, start.y);
@@ -249,17 +301,37 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
 
           if (nextPos.x !== start.x || nextPos.z !== start.z) {
             const full = groundHeightAt(groundMeshes, nextPos.x, nextPos.z, groundY);
-            if (full !== null && full - groundY <= STEP_LIMIT && !isUnderwater(nextPos.x, nextPos.z, full)) {
+            if (full === null) {
+              // Raycast miss: either a thin seam/hole in the merged low-poly
+              // mesh, or genuinely off the edge of the map into open water —
+              // the map's WorldMap_Collision/Home_Interior_Collision rect is a
+              // coarse XZ clamp, not a per-mesh boundary, so it doesn't stop
+              // the player before that edge, and the "Water" mesh's raycastable
+              // floor sits far below any shoreline height so it can't be used
+              // to detect "at the water's edge" either. Keep the last known
+              // height and let a short miss streak coast through (a real seam
+              // clears within a substep or two), but once it's carried the
+              // player past MAX_MISS_DRIFT, treat it as a wall — otherwise this
+              // is exactly how the player used to glide indefinitely across
+              // the water once off the edge of the land mesh.
+              missDrift.current += stepVelocity.length();
+              if (missDrift.current > MAX_MISS_DRIFT) {
+                nextPos.x = start.x;
+                nextPos.z = start.z;
+              }
+            } else if (Math.abs(full - groundY) <= STEP_LIMIT && !isUnderwater(nextPos.x, nextPos.z, full)) {
+              missDrift.current = 0;
               groundY = full;
             } else {
+              missDrift.current = 0;
               const alongX = groundHeightAt(groundMeshes, nextPos.x, start.z, groundY);
               const alongZ = groundHeightAt(groundMeshes, start.x, nextPos.z, groundY);
-              if (alongX !== null && alongX - groundY <= STEP_LIMIT && !isUnderwater(nextPos.x, start.z, alongX)) {
+              if (alongX !== null && Math.abs(alongX - groundY) <= STEP_LIMIT && !isUnderwater(nextPos.x, start.z, alongX)) {
                 nextPos.z = start.z;
                 groundY = alongX;
               } else if (
                 alongZ !== null &&
-                alongZ - groundY <= STEP_LIMIT &&
+                Math.abs(alongZ - groundY) <= STEP_LIMIT &&
                 !isUnderwater(start.x, nextPos.z, alongZ)
               ) {
                 nextPos.x = start.x;
@@ -289,10 +361,10 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
     if (introPlaying) {
       const t = introElapsed.current;
       if (t < INTRO_ZOOM_IN_END) {
-        effectiveZoom = THREE.MathUtils.lerp(1, INTRO_CLOSE_ZOOM, t / INTRO_ZOOM_IN_END);
+        effectiveZoom = THREE.MathUtils.lerp(1, cameraTuning.introCloseZoom, t / INTRO_ZOOM_IN_END);
       } else if (t < INTRO_ZOOM_OUT_END) {
         effectiveZoom = THREE.MathUtils.lerp(
-          INTRO_CLOSE_ZOOM,
+          cameraTuning.introCloseZoom,
           1,
           (t - INTRO_ZOOM_IN_END) / (INTRO_ZOOM_OUT_END - INTRO_ZOOM_IN_END)
         );
@@ -301,13 +373,15 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
       }
     }
 
+    // Camera is fixed to each room's spawn point, not the live player
+    // position — it only ever dollies in/out with zoom, it never pans to
+    // follow the character around.
+    const camAnchor = inside ? SPAWN_INTERIOR : SPAWN_EXTERIOR;
+    const roomZoom = effectiveZoom * (inside ? cameraTuning.interiorZoomBoost : 1);
     const damp = 1 - Math.pow(0.001, delta);
-    const desiredCam = camTargetScratch.current
-      .copy(group.current.position)
-      .addScaledVector(CAMERA_OFFSET, effectiveZoom);
+    const desiredCam = camTargetScratch.current.copy(camAnchor).addScaledVector(CAMERA_OFFSET, roomZoom);
     camera.position.lerp(desiredCam, damp);
-    const desiredLook = lookAtScratch.current.copy(group.current.position).add(UP);
-    camLookTarget.current.lerp(desiredLook, damp);
+    camLookTarget.current.copy(camAnchor).add(UP);
     camera.lookAt(camLookTarget.current);
 
     const pos = group.current.position;
@@ -315,14 +389,19 @@ export function Player({ sensorBoxes, groundMeshes, waterMesh, zoom }: PlayerPro
     for (const name in sensorBoxes) {
       if (name.endsWith("_Collision")) continue;
       const box = sensorBoxes[name];
-      if (pos.x >= box.min.x && pos.x <= box.max.x && pos.z >= box.min.z && pos.z <= box.max.z) {
+      if (
+        pos.x >= box.min.x &&
+        pos.x <= box.max.x &&
+        pos.z >= box.min.z &&
+        pos.z <= box.max.z &&
+        pos.y >= box.min.y - SENSOR_Y_TOLERANCE &&
+        pos.y <= box.max.y + SENSOR_Y_TOLERANCE
+      ) {
         touching = name;
         break;
       }
     }
     setTouching(touching);
-    if (touching === "Entrance_Sensor" && !inside) setInside(true);
-    if (touching === "Exit_Sensor" && inside) setInside(false);
   });
 
   return <primitive ref={group} object={cloned} scale={1} />;

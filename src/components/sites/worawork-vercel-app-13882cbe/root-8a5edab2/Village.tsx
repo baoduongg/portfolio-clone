@@ -57,6 +57,11 @@ export function Village({ inside, onSensorsReady, onGroundReady, onWaterReady }:
   const outlineMeshes = useRef<Record<string, THREE.Object3D>>({});
   const turnOnMeshes = useRef<Record<string, THREE.Object3D>>({});
   const activeOutline = useRef<string | null>(null);
+  // All non-hidden meshes, interior + exterior combined; the room-filtered
+  // subset actually handed to the player is derived below (see the
+  // inside-keyed effect) so a hole in one room's floor can't raycast through
+  // to the other room's geometry ~200 units away.
+  const allGroundMeshes = useRef<THREE.Mesh[]>([]);
 
   const currentTouchingObject = useWoraWorkStore((s) => s.currentTouchingObject);
   const litSensors = useWoraWorkStore((s) => s.litSensors);
@@ -85,10 +90,21 @@ export function Village({ inside, onSensorsReady, onGroundReady, onWaterReady }:
       if (!GROUND_EXCLUDE.has(obj.name)) groundMeshes.push(obj);
     });
     onSensorsReady(boxes);
-    onGroundReady(groundMeshes);
+    allGroundMeshes.current = groundMeshes;
     onWaterReady(waterMesh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cloned]);
+
+  // Re-derive whenever the room changes: the interior and exterior floors
+  // are two separate (and separately holey) low-poly meshes baked into the
+  // same file 200 units apart, so handing the player raycaster meshes from
+  // the room they're NOT in lets a hole in the current floor punch through
+  // to the other room's terrain and return a wildly wrong height instead of
+  // a clean miss.
+  useEffect(() => {
+    onGroundReady(allGroundMeshes.current.filter((m) => (inside ? !EXTERIOR_ONLY.has(m.name) : !INTERIOR_ONLY.has(m.name))));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cloned, inside]);
 
   // Hover highlight: show the touched sensor's Outline mesh, hide the last one.
   useEffect(() => {

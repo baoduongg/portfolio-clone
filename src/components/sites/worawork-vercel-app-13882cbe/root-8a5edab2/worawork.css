@@ -14,6 +14,14 @@
   font-family: "Coiny", system-ui, sans-serif;
   color: #5c3d22;
   background: #d6863f;
+  transition: background 0.4s ease;
+}
+
+/* Interior room mesh is smaller than the camera's view, so empty space shows
+   around it — tint that void dark (indoor) instead of the exterior's orange
+   sky so it reads as intentional, not a rendering gap. */
+.ww-root--inside {
+  background: #1b120a;
 }
 
 .worawork-canvas {
@@ -159,6 +167,29 @@
   font-family: inherit;
 }
 
+/* Floating hint badge above interactable props (InteractionHints.tsx) */
+.ww-hint-badge {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(88, 62, 34, 0.85);
+  color: #fbe6c2;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  user-select: none;
+  animation: ww-hint-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes ww-hint-bob {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50% { transform: translateY(-6px); opacity: 1; }
+}
+
 /* Modal shared */
 @keyframes ww-backdrop-in {
   from { opacity: 0; }
@@ -295,12 +326,14 @@
   border-radius: 12px;
 }
 
-/* Portfolio window */
+/* Portfolio window — styled as a computer monitor showing a browser */
 .ww-portfolio-window {
   position: relative;
-  background: #fff6e2;
-  border: 4px solid #6b4a2b;
-  border-radius: 20px;
+  background: linear-gradient(180deg, #3a3a3e, #232326);
+  border: 3px solid #17171a;
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 14px 14px 20px;
   width: min(880px, 92vw);
   height: min(640px, 85vh);
   display: flex;
@@ -313,11 +346,168 @@
   animation: ww-modal-out 0.18s ease both;
 }
 
+.ww-pc-screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.ww-pc-browserbar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  background: #ececee;
+  border-bottom: 1px solid #dcdce0;
+}
+
+.ww-pc-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+
+.ww-pc-dot-red {
+  background: #ff5f57;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ww-pc-dot-yellow {
+  background: #febc2e;
+}
+
+.ww-pc-dot-green {
+  background: #28c840;
+}
+
+.ww-pc-url-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.6rem;
+  padding: 0.3rem 0.8rem;
+  background: #fff;
+  border-radius: 999px;
+  border: 1px solid #dcdce0;
+  color: #6b6b70;
+  font-size: 0.8rem;
+  font-family: system-ui, sans-serif;
+}
+
+.ww-pc-lock {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: #8a8a8f;
+}
+
+.ww-pc-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 0.4rem;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #6b6b70;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.ww-pc-back:hover {
+  background: #e2e2e6;
+  color: #333;
+}
+
+/* PC "desktop" screen — icon launcher shown when the in-game PC first opens */
+.ww-pc-desktop {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 2.5rem;
+  padding: 2.5rem;
+  background: linear-gradient(160deg, #eaf4fb, #dcecf6);
+}
+
+.ww-pc-desktop-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: 96px;
+  font-family: "Coiny", sans-serif;
+  font-size: 0.85rem;
+  color: #3a3a3e;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ww-pc-desktop-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  color: #fff6e2;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ww-pc-desktop-icon:hover .ww-pc-desktop-icon-badge {
+  transform: translateY(2px);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.ww-pc-desktop-icon-badge--portfolio {
+  background: #4a90d9;
+}
+
+.ww-pc-desktop-icon-badge--flappy {
+  background: #e2954b;
+}
+
+/* Flappy mini-game */
+.ww-flappy {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #232326;
+}
+
+.ww-flappy-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
 .ww-portfolio-nav {
   display: flex;
-  gap: 0.5rem;
-  padding: 1rem 3rem 0.5rem;
-  border-bottom: 2px solid #e6c894;
+  gap: 0.4rem;
+  padding: 0.6rem 1.5rem 0;
+  background: #f4f4f6;
+  border-bottom: 1px solid #e2e2e6;
   flex-wrap: wrap;
 }
 
@@ -325,23 +515,24 @@
   font-family: inherit;
   background: transparent;
   border: none;
-  color: #a9772f;
-  padding: 0.5rem 0.9rem;
-  border-radius: 999px;
+  color: #6b6b70;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px 8px 0 0;
   cursor: pointer;
   touch-action: manipulation;
   font-size: 0.85rem;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .ww-nav-item:hover {
-  background: #f0dbb2;
-  transform: translateY(-1px);
+  background: #e6e6ea;
+  color: #333;
 }
 
 .ww-nav-item.active {
-  background: #6b4a2b;
-  color: #fff6e2;
+  background: #fff;
+  color: #17171a;
+  font-weight: 600;
 }
 
 @keyframes ww-page-fade-in {
@@ -352,15 +543,25 @@
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem 3rem 2.5rem;
-  color: #5c3d22;
+  color: #3a3a3e;
+  background: #fff;
   font-family: system-ui, sans-serif;
   line-height: 1.6;
   animation: ww-page-fade-in 0.22s ease both;
 }
 
+.ww-page-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.ww-page-content::-webkit-scrollbar-thumb {
+  background: #d8d8dc;
+  border-radius: 999px;
+}
+
 .ww-portfolio-page h2 {
   font-family: "Coiny", sans-serif;
-  color: #6b4a2b;
+  color: #232326;
 }
 
 .ww-section {
@@ -369,7 +570,7 @@
 
 .ww-section-title {
   font-family: "Coiny", sans-serif;
-  color: #6b4a2b;
+  color: #232326;
   margin-top: 2rem;
 }
 

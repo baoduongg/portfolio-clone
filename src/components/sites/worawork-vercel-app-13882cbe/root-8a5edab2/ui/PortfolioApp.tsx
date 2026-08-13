@@ -2,9 +2,6 @@
 
 import { bio, experience, education, skills, artProjects } from "../data/content";
 import { useWoraWorkStore, type PortfolioPageId } from "../store";
-import { Modal } from "./Modal";
-
-const PC_SENSOR = "Sitting_PC_Sensor";
 
 const NAV: { id: PortfolioPageId; label: string }[] = [
   { id: "about", label: "About Me" },
@@ -127,18 +124,13 @@ function BehindScenesPage() {
   );
 }
 
-export function PortfolioPanel() {
-  const portfolioOpen = useWoraWorkStore((s) => s.portfolioOpen);
+export function portfolioUrlLabel(page: PortfolioPageId): string {
+  return `worawork.dev/${page}`;
+}
+
+export function PortfolioApp() {
   const currentPage = useWoraWorkStore((s) => s.currentPage);
   const setCurrentPage = useWoraWorkStore((s) => s.setCurrentPage);
-  const setPortfolioOpen = useWoraWorkStore((s) => s.setPortfolioOpen);
-  const sittingOn = useWoraWorkStore((s) => s.sittingOn);
-  const setSittingOn = useWoraWorkStore((s) => s.setSittingOn);
-
-  const close = () => {
-    setPortfolioOpen(false);
-    if (sittingOn === PC_SENSOR) setSittingOn(null);
-  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -154,10 +146,7 @@ export function PortfolioPanel() {
   };
 
   return (
-    <Modal open={portfolioOpen} onClose={close} className="ww-portfolio-window">
-      <button className="ww-modal-close" onClick={close} aria-label="Close">
-        ×
-      </button>
+    <>
       <nav className="ww-portfolio-nav">
         {NAV.map((item) => (
           <button
@@ -172,6 +161,6 @@ export function PortfolioPanel() {
       <div className="ww-page-content" key={currentPage}>
         {renderPage()}
       </div>
-    </Modal>
+    </>
   );
 }
