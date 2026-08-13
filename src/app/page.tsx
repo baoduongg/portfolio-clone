@@ -1,9 +1,5 @@
+import { WoraWorkApp } from "@/components/sites/worawork-vercel-app-13882cbe/root-8a5edab2/WoraWorkApp";
+
 export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">
-        Clone target not yet built. Run <code className="font-mono text-foreground">/clone-website</code> to start.
-      </p>
-    </main>
-  );
+  return <WoraWorkApp />;
 }
