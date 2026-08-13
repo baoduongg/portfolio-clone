@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useWoraWorkStore } from "../store";
+import { Modal } from "./Modal";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -10,8 +11,6 @@ export function ContactPanel() {
   const setMailboxOpen = useWoraWorkStore((s) => s.setMailboxOpen);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<Status>("idle");
-
-  if (!mailboxOpen) return null;
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -28,31 +27,29 @@ export function ContactPanel() {
   };
 
   return (
-    <div className="ww-modal-backdrop" onClick={() => setMailboxOpen(false)}>
-      <div className="ww-modal ww-mailbox-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="ww-modal-close" onClick={() => setMailboxOpen(false)} aria-label="Close">
-          ×
+    <Modal open={mailboxOpen} onClose={() => setMailboxOpen(false)} className="ww-modal ww-mailbox-modal">
+      <button className="ww-modal-close" onClick={() => setMailboxOpen(false)} aria-label="Close">
+        ×
+      </button>
+      <h2>Leave a Message</h2>
+      <form className="ww-contact-form" onSubmit={onSubmit}>
+        <label>
+          Name
+          <input name="name" value={form.name} onChange={onChange} required />
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" value={form.email} onChange={onChange} required />
+        </label>
+        <label>
+          Message
+          <textarea name="message" value={form.message} onChange={onChange} rows={4} required />
+        </label>
+        <button type="submit" disabled={status === "sending"}>
+          {status === "sending" ? "Sending..." : "Send"}
         </button>
-        <h2>Leave a Message</h2>
-        <form className="ww-contact-form" onSubmit={onSubmit}>
-          <label>
-            Name
-            <input name="name" value={form.name} onChange={onChange} required />
-          </label>
-          <label>
-            Email
-            <input type="email" name="email" value={form.email} onChange={onChange} required />
-          </label>
-          <label>
-            Message
-            <textarea name="message" value={form.message} onChange={onChange} rows={4} required />
-          </label>
-          <button type="submit" disabled={status === "sending"}>
-            {status === "sending" ? "Sending..." : "Send"}
-          </button>
-          {status === "sent" && <p className="ww-form-status">Message sent! (demo only)</p>}
-        </form>
-      </div>
-    </div>
+        {status === "sent" && <p className="ww-form-status">Message sent! (demo only)</p>}
+      </form>
+    </Modal>
   );
 }

@@ -35,14 +35,21 @@
 /* Start overlay */
 .ww-start-overlay {
   position: absolute;
-  inset: 16px;
-  border: 4px dashed #6b4a2b;
-  border-radius: 24px;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
+  background: #d6863f;
   z-index: 20;
+}
+
+.ww-start-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 4px dashed #6b4a2b;
+  border-radius: 24px;
+  pointer-events: none;
 }
 
 .ww-start-button {
@@ -153,6 +160,19 @@
 }
 
 /* Modal shared */
+@keyframes ww-backdrop-in {
+  from { opacity: 0; }
+}
+@keyframes ww-backdrop-out {
+  to { opacity: 0; }
+}
+@keyframes ww-modal-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.94); }
+}
+@keyframes ww-modal-out {
+  to { opacity: 0; transform: translateY(16px) scale(0.96); }
+}
+
 .ww-modal-backdrop {
   position: absolute;
   inset: 0;
@@ -161,6 +181,11 @@
   align-items: center;
   justify-content: center;
   z-index: 30;
+  animation: ww-backdrop-in 0.2s ease both;
+}
+
+.ww-modal-backdrop.ww-modal-closing {
+  animation: ww-backdrop-out 0.18s ease both;
 }
 
 .ww-modal {
@@ -173,6 +198,11 @@
   width: 90%;
   max-height: 85vh;
   overflow-y: auto;
+  animation: ww-modal-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.ww-modal.ww-modal-closing {
+  animation: ww-modal-out 0.18s ease both;
 }
 
 .ww-modal-close {
@@ -189,6 +219,12 @@
   line-height: 1;
   cursor: pointer;
   touch-action: manipulation;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.ww-modal-close:hover {
+  background: #fbe0ac;
+  transform: rotate(90deg);
 }
 
 .ww-modal h2 {
@@ -270,6 +306,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: ww-modal-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.ww-portfolio-window.ww-modal-closing {
+  animation: ww-modal-out 0.18s ease both;
 }
 
 .ww-portfolio-nav {
@@ -290,11 +331,21 @@
   cursor: pointer;
   touch-action: manipulation;
   font-size: 0.85rem;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.ww-nav-item:hover {
+  background: #f0dbb2;
+  transform: translateY(-1px);
 }
 
 .ww-nav-item.active {
   background: #6b4a2b;
   color: #fff6e2;
+}
+
+@keyframes ww-page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
 }
 
 .ww-page-content {
@@ -304,6 +355,7 @@
   color: #5c3d22;
   font-family: system-ui, sans-serif;
   line-height: 1.6;
+  animation: ww-page-fade-in 0.22s ease both;
 }
 
 .ww-portfolio-page h2 {

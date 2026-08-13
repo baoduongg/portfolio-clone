@@ -74,11 +74,17 @@ real Instagram/Foundation/fliphtml5 links and 60+ real project images.
   button layer for touch devices; this clone is keyboard-only. Desktop-only
   for now.
 - **Decorative micro-interactions not implemented**: the ~15
-  `Clickable_Lighting_*_Sensor` lamps (click to toggle on/off), sitting
-  animations on every chair/sofa/bed, the fridge/desk notes
-  (`Note_Sensor`/`NoteFridge_Sensor`), Nintendo Switch prop, and the
-  bell/clock chime. Only the two sensors that gate real content (PC →
-  portfolio nav, MailBox → contact form) plus Entrance/Exit are wired up.
+  `Clickable_Lighting_*_Sensor` lamps (click to toggle on/off), the
+  fridge/desk notes (`Note_Sensor`/`NoteFridge_Sensor`), Nintendo Switch
+  prop, and the bell/clock chime. Only the two sensors that gate real
+  content (PC → portfolio nav, MailBox → contact form) plus Entrance/Exit
+  are wired up. **Sitting is implemented**: every `Sitting_*_Sensor`
+  (bench, bench-bed, chairs, sofas, stools, plus the PC chair) plays the
+  `Sit` clip and pins the player to the seat via `store.ts` `sittingOn`
+  (see `InteractionOverlay.tsx` `SIT_FURNITURE` / `Player.tsx`'s
+  `sittingOn` branch); E toggles sit/stand on furniture, while the PC
+  sensor also opens the portfolio panel and stands the player up again on
+  close. `Sleeping_Bed_Sensor` (a `Sleep` clip) is not wired up.
 - **Contact form is a local mock.** The original POSTs to the site owner's
   personal Formspree endpoint; reusing it from a clone would send fake
   submissions to a real person's inbox, so this clone's form only simulates

@@ -1,12 +1,7 @@
 import { create } from "zustand";
 
 export type PortfolioPageId = "about" | "experience" | "arts" | "behind-scenes";
-export type SensorName =
-  | "Sitting_PC_Sensor"
-  | "Clickable_MailBox_Sensor"
-  | "Entrance_Sensor"
-  | "Exit_Sensor"
-  | null;
+export type SensorName = string | null;
 
 interface WoraWorkState {
   started: boolean;
@@ -19,6 +14,8 @@ interface WoraWorkState {
   mailboxOpen: boolean;
   portfolioOpen: boolean;
   inside: boolean;
+  litSensors: Record<string, boolean>;
+  sittingOn: SensorName;
 
   start: () => void;
   endIntro: () => void;
@@ -30,6 +27,8 @@ interface WoraWorkState {
   setMailboxOpen: (v: boolean) => void;
   setPortfolioOpen: (v: boolean) => void;
   setInside: (v: boolean) => void;
+  toggleLight: (baseName: string) => void;
+  setSittingOn: (s: SensorName) => void;
 }
 
 export const useWoraWorkStore = create<WoraWorkState>((set) => ({
@@ -37,12 +36,14 @@ export const useWoraWorkStore = create<WoraWorkState>((set) => ({
   introPlaying: false,
   showGreetingText: false,
   showControls: false,
-  muted: false,
+  muted: true,
   currentTouchingObject: null,
   currentPage: "about",
   mailboxOpen: false,
   portfolioOpen: false,
   inside: false,
+  litSensors: {},
+  sittingOn: null,
 
   start: () => set({ started: true, introPlaying: true }),
   endIntro: () => set({ introPlaying: false, showGreetingText: false }),
@@ -54,4 +55,7 @@ export const useWoraWorkStore = create<WoraWorkState>((set) => ({
   setMailboxOpen: (mailboxOpen) => set({ mailboxOpen }),
   setPortfolioOpen: (portfolioOpen) => set({ portfolioOpen }),
   setInside: (inside) => set({ inside }),
+  toggleLight: (baseName) =>
+    set((s) => ({ litSensors: { ...s.litSensors, [baseName]: !s.litSensors[baseName] } })),
+  setSittingOn: (sittingOn) => set({ sittingOn }),
 }));

@@ -2,6 +2,9 @@
 
 import { bio, experience, education, skills, artProjects } from "../data/content";
 import { useWoraWorkStore, type PortfolioPageId } from "../store";
+import { Modal } from "./Modal";
+
+const PC_SENSOR = "Sitting_PC_Sensor";
 
 const NAV: { id: PortfolioPageId; label: string }[] = [
   { id: "about", label: "About Me" },
@@ -129,8 +132,13 @@ export function PortfolioPanel() {
   const currentPage = useWoraWorkStore((s) => s.currentPage);
   const setCurrentPage = useWoraWorkStore((s) => s.setCurrentPage);
   const setPortfolioOpen = useWoraWorkStore((s) => s.setPortfolioOpen);
+  const sittingOn = useWoraWorkStore((s) => s.sittingOn);
+  const setSittingOn = useWoraWorkStore((s) => s.setSittingOn);
 
-  if (!portfolioOpen) return null;
+  const close = () => {
+    setPortfolioOpen(false);
+    if (sittingOn === PC_SENSOR) setSittingOn(null);
+  };
 
   const renderPage = () => {
     switch (currentPage) {
@@ -146,24 +154,24 @@ export function PortfolioPanel() {
   };
 
   return (
-    <div className="ww-modal-backdrop" onClick={() => setPortfolioOpen(false)}>
-      <div className="ww-portfolio-window" onClick={(e) => e.stopPropagation()}>
-        <button className="ww-modal-close" onClick={() => setPortfolioOpen(false)} aria-label="Close">
-          ×
-        </button>
-        <nav className="ww-portfolio-nav">
-          {NAV.map((item) => (
-            <button
-              key={item.id}
-              className={`ww-nav-item ${currentPage === item.id ? "active" : ""}`}
-              onClick={() => setCurrentPage(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div className="ww-page-content">{renderPage()}</div>
+    <Modal open={portfolioOpen} onClose={close} className="ww-portfolio-window">
+      <button className="ww-modal-close" onClick={close} aria-label="Close">
+        ×
+      </button>
+      <nav className="ww-portfolio-nav">
+        {NAV.map((item) => (
+          <button
+            key={item.id}
+            className={`ww-nav-item ${currentPage === item.id ? "active" : ""}`}
+            onClick={() => setCurrentPage(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="ww-page-content" key={currentPage}>
+        {renderPage()}
       </div>
-    </div>
+    </Modal>
   );
 }

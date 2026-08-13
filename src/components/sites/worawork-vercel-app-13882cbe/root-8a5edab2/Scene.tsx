@@ -15,6 +15,7 @@ const HDRI_URL =
 export function Scene() {
   const [sensorBoxes, setSensorBoxes] = useState<SensorBoxes>({});
   const [groundMeshes, setGroundMeshes] = useState<THREE.Mesh[]>([]);
+  const [waterMesh, setWaterMesh] = useState<THREE.Mesh | null>(null);
   const inside = useWoraWorkStore((s) => s.inside);
   const started = useWoraWorkStore((s) => s.started);
   const zoom = useRef(1);
@@ -33,8 +34,8 @@ export function Scene() {
         <Environment files={HDRI_URL} />
         <ambientLight intensity={0.9} />
         <directionalLight position={[6, 10, 4]} intensity={1.2} />
-        <Village inside={inside} onSensorsReady={setSensorBoxes} onGroundReady={setGroundMeshes} />
-        <Player sensorBoxes={sensorBoxes} groundMeshes={groundMeshes} zoom={zoom.current} />
+        <Village inside={inside} onSensorsReady={setSensorBoxes} onGroundReady={setGroundMeshes} onWaterReady={setWaterMesh} />
+        <Player sensorBoxes={sensorBoxes} groundMeshes={groundMeshes} waterMesh={waterMesh} zoom={zoom.current} />
         {!inside && <Duck />}
       </Canvas>
     </div>
