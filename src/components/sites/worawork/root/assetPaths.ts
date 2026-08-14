@@ -1,4 +1,4 @@
-const BASE = "/sites/worawork-vercel-app-13882cbe/root-8a5edab2";
+const BASE = "/sites/worawork/root";
 
 export const MODEL_PLAYER = `${BASE}/Models/Player.glb`;
 export const MODEL_DUCK = `${BASE}/Models/Duck.glb`;

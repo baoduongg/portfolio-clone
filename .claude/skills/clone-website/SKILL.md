@@ -32,8 +32,8 @@ Choose an `<app-root>` before extraction. For a single application, `<app-root>`
 
 Then assign each target:
 
-- A collision-resistant `<site-key>`: a readable origin slug (including a non-default port) plus the first 8 lowercase hex characters of SHA-256 over the normalized origin.
-- A collision-resistant `<page-key>`: a segment-preserving readable pathname slug plus the first 8 lowercase hex characters of SHA-256 over the normalized pathname and any stateful query/fragment; use `root-<hash>` for `/`. Never rely on lossy character replacement alone.
+- A `<site-key>`: a readable origin slug (including a non-default port). Only if it collides with an existing `<site-key>` already in the repo, disambiguate by appending the first 8 lowercase hex characters of SHA-256 over the normalized origin.
+- A `<page-key>`: a segment-preserving readable pathname slug; use `root` for `/`. Never rely on lossy character replacement alone. Only if it collides with an existing `<page-key>` under the same `<site-key>`, disambiguate by appending the first 8 lowercase hex characters of SHA-256 over the normalized pathname and any stateful query/fragment.
 - An artifact root: `<app-root>/docs/research/<site-key>/<page-key>/`.
 - A screenshot root: `<app-root>/docs/design-references/<site-key>/<page-key>/`.
 - A component root: `<app-root>/src/components/sites/<site-key>/<page-key>/`, with genuinely shared same-site components under `<app-root>/src/components/sites/<site-key>/shared/`.

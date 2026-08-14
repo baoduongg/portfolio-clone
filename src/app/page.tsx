@@ -1,4 +1,4 @@
-import { WoraWorkApp } from "@/components/sites/worawork-vercel-app-13882cbe/root-8a5edab2/WoraWorkApp";
+import { WoraWorkApp } from "@/components/sites/worawork/root/WoraWorkApp";
 
 export default function Home() {
   return <WoraWorkApp />;

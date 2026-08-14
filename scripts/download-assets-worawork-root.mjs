@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const BASE = "https://worawork.vercel.app";
-const OUT = "public/sites/worawork-vercel-app-13882cbe/root-8a5edab2";
+const OUT = "public/sites/worawork/root";
 
 const files = [
   "Icons/ArrowLeft.webp","Icons/ArrowRight.webp","Icons/ArrowDown.webp","Icons/Blender.webp","Icons/CSS.webp","Icons/CSharp.webp",

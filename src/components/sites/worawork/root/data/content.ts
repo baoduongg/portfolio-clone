@@ -60,7 +60,7 @@ export const education = [
   },
 ];
 
-const ICON_BASE = "/sites/worawork-vercel-app-13882cbe/root-8a5edab2/Icons";
+const ICON_BASE = "/sites/worawork/root/Icons";
 
 export const skills = {
   threeD: [
@@ -84,7 +84,7 @@ export const skills = {
   ],
 };
 
-const IMG_BASE = "/sites/worawork-vercel-app-13882cbe/root-8a5edab2/Images";
+const IMG_BASE = "/sites/worawork/root/Images";
 
 export const artProjects = [
   {

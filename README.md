@@ -24,7 +24,7 @@ This isn't a DOM/CSS marketing-page clone — the original site is a `@react-thr
 | Mouse wheel        | Zoom                                          |
 | Touch (mobile)     | On-screen joystick + A/B buttons              |
 
-Full reverse-engineering notes — what's faithfully rebuilt vs. simplified — live in [`docs/research/worawork-vercel-app-13882cbe/root-8a5edab2/NOTES.md`](docs/research/worawork-vercel-app-13882cbe/root-8a5edab2/NOTES.md).
+Full reverse-engineering notes — what's faithfully rebuilt vs. simplified — live in [`docs/research/worawork/root/NOTES.md`](docs/research/worawork/root/NOTES.md).
 
 ## Quick Start
 
@@ -48,7 +48,7 @@ Everything for the cloned site is namespaced under a `<site-key>/<page-key>` pai
 
 ```
 src/app/page.tsx                                   # mounts WoraWorkApp at "/"
-src/components/sites/worawork-vercel-app-13882cbe/root-8a5edab2/
+src/components/sites/worawork/root/
   WoraWorkApp.tsx      # composes the pieces below
   Scene.tsx            # R3F Canvas, zoom, pointer-events gating
   Village.tsx           # loads Models.glb (village + house interior), sensor/ground meshes
@@ -57,10 +57,10 @@ src/components/sites/worawork-vercel-app-13882cbe/root-8a5edab2/
   store.ts              # zustand store — single source of truth for game state
   ui/                   # HUD, portfolio/contact/controls panels, touch controls
   data/content.ts        # bio/experience/arts content extracted verbatim from the original
-docs/research/worawork-vercel-app-13882cbe/root-8a5edab2/NOTES.md   # research + known gaps
-docs/design-references/worawork-vercel-app-13882cbe/root-8a5edab2/  # reference screenshots
-public/sites/worawork-vercel-app-13882cbe/root-8a5edab2/           # downloaded models/textures/audio
-scripts/download-assets-worawork-vercel-app-13882cbe-root-8a5edab2.mjs
+docs/research/worawork/root/NOTES.md   # research + known gaps
+docs/design-references/worawork/root/  # reference screenshots
+public/sites/worawork/root/           # downloaded models/textures/audio
+scripts/download-assets-worawork-root.mjs
 ```
 
 ## Commands
